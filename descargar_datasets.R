@@ -5,6 +5,9 @@ library(fs)
 library(purrr)
 library(janitor)
 library(glue)
+library(chromote)
+library(dplyr)
+library(readr)
 
 wait_for_download <- function(download_dir, filename, timeout = 60) {
   start_time <- Sys.time()
@@ -98,4 +101,4 @@ df |>
     across(where(is.character), str_to_title),
     fecha = ymd(fecha)
   ) |> 
-  write_rds(glue("data/delitos_{today()}.rds"))
+  readr::write_rds(glue("data/delitos_{today()}.rds"))
