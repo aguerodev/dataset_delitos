@@ -10,27 +10,14 @@ library(systemfonts)
 habitantes <- data.frame(
   fecha = 2014:2025,
   poblacion = c(4771778, 4828520, 4882723, 4933519, 4981349,
-                5020970, 5051379, 5077667, 5104907, 5135912, 5164860, 5191823)
+                5020970, 5051379, 5077667, 5104907, 5135912, 5164860,5191823)
 )
 
-df <- read_rds("data/delitos.rds") |>
-  clean_names()
-
-df <- df |>
-  mutate(
-    across(where(is.character), str_to_title),
-    fecha = ymd(fecha)
-  )
-
-df |>
-  filter(delito == "Homicidio") |> 
-  mutate(fecha = floor_date(fecha,"1 month")) |> 
-  count(fecha,delito) |> 
-  View()
+df <- read_rds("data/delitos_2025-03-03.rds")
 
 x <- df |>
-  filter(delito == "Homicidio", fecha >= "2014-05-01") |>
-  count(date = floor_date(fecha, "1 month")) |> 
+  filter(delito == "Homicidio", fecha >= "2014-05-01", fecha <= "2025-01-31") |>
+  count(date = update(fecha, day = 1)) |> 
   mutate(fecha = year(date)) |> 
   left_join(
     habitantes,
@@ -38,7 +25,7 @@ x <- df |>
   ) |> 
   mutate(
     n = (n /poblacion) * 100000,
-    n = roll_mean(n, 5, fill = NA_real_)
+    n = roll_meanr(n, 5, fill = NA_real_)
   )
 
 
@@ -66,7 +53,8 @@ ggplot(
     label = "Luis Guillermo Solís Rivera",
     hjust = 0.5,
     vjust = -0.5,
-    size = 4
+    size = 4,
+    family = "Roboto-Light"
   ) +
   # Periodo de Carlos Alvarado Quesada: 8 de mayo de 2018 a 8 de mayo de 2022
   annotate(
@@ -85,7 +73,8 @@ ggplot(
     label = "Carlos Alvarado Quesada",
     hjust = 0.5,
     vjust = -0.5,
-    size = 4
+    size = 4,
+    family = "Roboto-Light"
   ) +
   # Periodo de Rodrigo Chaves Robles: desde 8 de mayo de 2022 hasta (por ejemplo) 8 de mayo de 2026
   annotate(
@@ -104,7 +93,8 @@ ggplot(
     label = "Rodrigo Chaves Robles",
     hjust = 0.5,
     vjust = -0.5,
-    size = 4
+    size = 4,
+    family = "Roboto-Light"
   ) +
   geom_line(linewidth = 0.8) +
   labs(
