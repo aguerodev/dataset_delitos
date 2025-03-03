@@ -8,6 +8,7 @@ library(glue)
 library(chromote)
 library(dplyr)
 library(readr)
+library(stringr)
 
 wait_for_download <- function(download_dir, filename, timeout = 60) {
   start_time <- Sys.time()
