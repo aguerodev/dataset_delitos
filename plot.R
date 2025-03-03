@@ -36,7 +36,6 @@ ggplot(
     y = n
   )
 ) +
-  # Periodo de Carlos Alvarado Quesada: 8 de mayo de 2018 a 8 de mayo de 2022
   annotate(
     "rect",
     xmin = as.Date("2014-05-08"),
@@ -56,7 +55,6 @@ ggplot(
     size = 4,
     family = "Roboto-Light"
   ) +
-  # Periodo de Carlos Alvarado Quesada: 8 de mayo de 2018 a 8 de mayo de 2022
   annotate(
     "rect",
     xmin = as.Date("2018-05-08"),
@@ -76,7 +74,6 @@ ggplot(
     size = 4,
     family = "Roboto-Light"
   ) +
-  # Periodo de Rodrigo Chaves Robles: desde 8 de mayo de 2022 hasta (por ejemplo) 8 de mayo de 2026
   annotate(
     "rect",
     xmin = as.Date("2022-05-08"),
