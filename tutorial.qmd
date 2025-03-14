@@ -1,0 +1,580 @@
+---
+title: "Creación de cuadros estadísticos"
+subtitle: "Basado en la guía para la presentación de información estadística” (Segunda edición)"
+format: 
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+code-copy: true
+code-line-numbers: true
+---
+
+## Introducción {#sec-introduccion}
+
+Este tutorial enseña a crear cuadros estadísticos profesionales utilizando el paquete `gt` en R, siguiendo la ["Guía para la presentación de información estadística" (Segunda edición)](https://admin.inec.cr/sites/default/files/media/mepresentinfoestadist-21122017_2.pdf) del Instituto Nacional de Estadística y Censos (INEC).
+
+Para este ejercicio replicaremos la tabla primera tabla provista en los ejemplos de la guia.
+
+![](tabla_inec.png)
+
+## Elementos de una cuadro estadístico {#sec-elementos}
+
+Según la guía del INEC, toda cuadro estadístico debe contener los siguientes elementos:
+
+1. **Número del cuadro**: Identificador numérico o alfanumérico de referencia.
+
+2. **Título**: Descripción concisa que responde a qué, cómo, dónde y cuándo.
+
+3. **Notas preliminares**: Aclaraciones sobre unidades de medida y aspectos del título.
+
+4. **Encabezado de la matriz de datos**: Títulos de columnas.
+
+5. **Columna matriz**: Primera columna con las categorías principales.
+
+6. **Matriz de datos**: Conjunto de datos numéricos organizados.
+
+7. **Pie de cuadro**: Notas aclaratorias y fuente de los datos
+
+## Creación de la tabla paso a paso {#sec-creacion}
+
+### Paso 1: Preparar los datos {#sec-paso1}
+
+Comenzamos cargando los paquetes necesarios y preparando los datos:
+
+```{r}
+#| warning: false
+#| message: false
+#| code-fold: true
+#| 
+# Cargar bibliotecas
+library(gt)
+library(dplyr)
+library(systemfonts)
+
+# Crear datos según el ejemplo del INEC sobre ingresos por hogar
+datos <- tibble(
+  concepto = c(
+    "Ingreso total del hogar",
+    "Ingreso por trabajo",
+    "Ingreso por salario",
+    "Ingreso autónomo",
+    "Ingreso renta de la propiedad",
+    "Subsidios estatales y becas",
+    "Otras transferencias"
+  ),
+  total_2011 = c(858974, 755110, 540394, 164671, 35945, 17001, 89827),
+  urbana_2011 = c(1015375, 863505, 639480, 187105, 75284, 8303, 111200),
+  rural_2011 = c(555471, 508650, 317140, 117118, 27353, 15318, 42988),
+  total_2012 = c(919427, 748175, 570991, 177183, 87200, 10962, 73088),
+  urbana_2012 = c(1088573, 858287, 671435, 191851, 87833, 8514, 127749),
+  rural_2012 = c(632928, 533243, 357470, 175776, 33607, 15719, 59556)
+)
+
+```
+
+### Paso 2: Crear tabla base - Columna matriz {#sec-paso2}
+
+Lo primero a definir será la **matriz de datos** asi como la **columna matriz** (primera columna a la izquierda) que contiene las características principales de los datos.
+
+```{r}
+# Crear tabla básica con columna matriz
+tabla <- datos |> 
+  gt(rowname_col = "concepto")
+
+tabla
+```
+
+
+### Paso 3: Agregar número de cuadro, título y notas preliminares {#sec-paso3}
+
+El  título debe responder a cuatro preguntas básicas:
+
+1. **¿Dónde?** - Ámbito geográfico (Costa Rica)
+
+2. **¿Qué?** - La temática (Promedio de ingresos por hogar)
+
+3. **¿Cómo?** - Clasificación (por año y zona según fuente de ingreso)
+
+4. **¿Cuándo?** - Período de referencia (julio 2011 y julio 2012)
+
+Al final nuestro titulo sería **Costa Rica: Promedio de ingresos por hogar, por año y zona según fuente de ingreso, julio 2011 y julio 2012**.
+
+En el paquete gt se utiliza el termino subtitulo para referise a lo que llamaremos **notas prelimitanes** estas son aclaraciones que se colocan debajo del título y sirven para:
+
++ Informar sobre unidades de medida de los datos presentados
+
+  + Miles de colones
+  + Toneladas
+  + Metros
+  + Porcentajes
+
++ Aclarar aspectos del título
+
+  + Exclusiones (ej: "excluye el valor locativo")
+  + Inclusiones (ej: "incluye el ingreso por la actividad secundaria")
+  + Otras especificaciones (ej: "excluye los ocupados sin ingreso")
+
++ Observaciones
+
+  + Generalmente usan un tamaño de letra menor al del título
+  + Van entre paréntesis
+  + Debe comenzar con letra mayúscula
+
+El paquete gt nos permite utilizar sintaxis de html y markdown para darle formato a los textos asi que utilizaremos `**` antes y despues de un texto para indicar que esta esta en negrita, asi como la etiqueta `<br>` para indicar que se debe dejar un lina en blanco entre elementos por ejemplo entre el numero de cuadro y el titulo principal.
+
+```{r}
+# Agregar número de cuadro, título y nota preliminar
+tabla <- tabla |>
+  tab_header(
+    title = md("**Cuadro 3.1**<br><br>**Costa Rica: Promedio de ingresos por hogar, por año y zona según fuente de ingreso, julio 2011 y julio 2012**"),
+    subtitle = md("*(Valores nominales)*<br><br>")
+  ) |>
+  tab_stubhead(label = md("**Fuente de ingresos**"))
+
+tabla
+```
+
+
+### Paso 4: Configurar encabezados de la matriz de datos {#sec-paso4}
+
+El **encabezado de la matriz de datos** debe organizar claramente las columnas y ser fácil de entender. La guía recomienda usar jerarquías cuando hay múltiples niveles de clasificación:
+
+```{r}
+# Configurar encabezados de la matriz de datos
+tabla <- tabla |>
+  # Etiquetas de columnas
+  cols_label(
+    total_2011 = md("**Total**"), 
+    urbana_2011 = md("**Urbana**"), 
+    rural_2011 = md("**Rural**"),
+    total_2012 = md("**Total**"), 
+    urbana_2012 = md("**Urbana**"), 
+    rural_2012 = md("**Rural**")
+  ) 
+
+tabla
+```
+
+```{r}
+# Configurar encabezados de la matriz de datos
+tabla <- tabla |>
+  # Jerarquía de encabezados según recomienda INEC
+  tab_spanner(
+    label = md("**Zona**"),
+    # Seleciona las columnas que termianan con 2011 pero no comienzan con total
+    columns = matches("(?<!total_)2011", perl = TRUE),
+    id = "anio_2011") |>
+  tab_spanner(
+    label = md("**Zona**"),
+    columns = matches("(?<!total_)2012", perl = TRUE),
+    id = "anio_2012") |>
+  # Selecciona todas las columnas que contiene 2011
+  tab_spanner(
+    label = md("**2011**"),
+    columns = contains("2011"),
+    level = 2,
+    id = "zona_2011") |>
+  tab_spanner(
+    label = md("**2012**"),
+    columns = contains("2012"),
+    level = 2,
+    id = "zona_2012") |>
+  # Ajustamos el emcabezado de la columna matriz para que este el alto requerido
+  tab_stubhead(label = md("**Fuente de ingresos**<br><br><br>"))
+
+tabla
+```
+
+
+### Paso 5: Agregar notas al pie - Pie de cuadro {#sec-paso5}
+
+El INEC establece que el **pie de cuadro** debe incluir tanto notas específicas para aclarar aspectos de los datos como la fuente de información. Las notas específicas se colocan primero y la fuente al final:
+
+```{r}
+# Agregar notas al pie y fuente
+tabla <- tabla |>
+  # Notas específicas
+  tab_footnote(
+    md("Ingreso con imputación de valores no declarados y con ajuste por sub declaración."),
+    cells_stub(rows = c("Ingreso por salario", "Ingreso autónomo", "Ingreso renta de la propiedad"))
+  ) |>
+  tab_footnote(
+    md("Ingreso con imputación de valores no declarados y con ajuste por sub declaración en las transferencias por pensión; incluye transferencia no monetaria."),
+    cells_stub(rows = "Otras transferencias")
+  ) |>
+  # Fuente (siempre al final del pie de cuadro según INEC)
+  tab_source_note(md("**Fuente:** INEC, Costa Rica. [2012]. *Encuesta Nacional de Hogares Julio 2012. Resultados Generales*. 1 [3], p. 14."))
+
+tabla
+```
+
+En este paso aplicamos la estructura recomendada por el INEC para el pie de cuadro, incluyendo notas específicas sobre los datos y la fuente de información al final.
+
+### Paso 6: Formatear los datos {#sec-paso6}
+
+El INEC recomienda que los valores numéricos se presenten con un formato claro y consistente. Para valores grandes, es recomendable usar separadores de miles para mejorar la legibilidad:
+
+```{r}
+# Formatear datos según recomendaciones del INEC
+tabla <- tabla |>
+  # Formato de números con separador de miles (espacio según normas internacionales)
+  fmt_number(columns = where(is.numeric), sep_mark = " ", decimals = 0) |>
+  # Indentación para mostrar jerarquía en la columna matriz
+  tab_stub_indent(rows = c(3, 4), indent = 5)
+
+tabla
+```
+
+Siguiendo las recomendaciones del INEC:
+- Formateamos los números con separador de miles para mejorar la legibilidad
+- Indentamos las filas que son subcategorías para mostrar la jerarquía en la columna matriz
+
+### Paso 7: Estilizar la tabla {#sec-paso7}
+
+La guía del INEC enfatiza la importancia de una presentación clara y profesional. Las tablas deben tener un diseño que facilite la lectura y comprensión de los datos:
+
+```{r}
+# Aplicar estilos siguiendo las recomendaciones del INEC
+tabla <- tabla |>
+  # Alineación (INEC recomienda texto a la izquierda y números centrados o a la derecha)
+  tab_style(
+    style = cell_text(align = "left"),
+    locations = cells_title()
+  ) |>
+  tab_style(
+    style = cell_text(align = "center"),
+    locations = list(
+      cells_body(columns = where(is.numeric)),
+      cells_column_labels(),
+      cells_column_spanners()
+    )
+  ) |>
+  # Destacar totales con negritas como recomienda el INEC
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(rows = 1)
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_stub(rows = 1)
+  ) |>
+  # Tipografía clara
+  opt_table_font(
+    font = list(
+      google_font(name = "Roboto")
+    )
+  )
+
+tabla
+```
+
+Aplicamos las recomendaciones del INEC sobre:
+- Alineación de texto (títulos a la izquierda, datos numéricos centrados)
+- Resaltar totales con negrita
+- Usar tipografía clara y legible
+
+### Paso 8: Configurar bordes y estructura final {#sec-paso8}
+
+El INEC recomienda un uso moderado de líneas divisorias, priorizando la claridad en la estructura. Los bordes principales deben separar claramente las secciones de la tabla:
+
+```{r}
+# Configurar bordes según recomendaciones del INEC
+tabla <- tabla |>
+  tab_options(
+    # Bordes principales
+    table.border.left.width = px(0), 
+    table.border.left.style = "none",
+    table.border.right.width = px(0), 
+    table.border.right.style = "none",
+    table.border.top.width = px(0),
+    table.border.bottom.width = px(0),
+    
+    # Bordes de encabezados (INEC recomienda separar claramente los encabezados)
+    column_labels.border.top.width = px(2), 
+    column_labels.border.top.color = "black",
+    column_labels.border.bottom.width = px(2), 
+    column_labels.border.bottom.style = "solid",
+    column_labels.border.bottom.color = "black",
+    heading.border.bottom.width = px(2), 
+    heading.border.bottom.color = "black",
+    
+    # Bordes de cuerpo (uso moderado según INEC)
+    stub.border.width = px(0),
+    table_body.hlines.width = px(0),
+    table_body.border.top.color = "black",
+    table_body.border.bottom.color = "black",
+    table_body.border.bottom.width = px(2),
+    
+    # Otros parámetros
+    footnotes.spec_ref = "^",
+    footnotes.spec_ftr = " "
+  )
+
+tabla
+```
+
+En este paso aplicamos las recomendaciones del INEC sobre bordes y estructura:
+- Uso moderado de líneas divisorias
+- Separación clara entre encabezados y cuerpo de la tabla
+- Bordes inferiores y superiores definidos
+
+### Paso 9: Exportar la tabla final {#sec-paso9}
+
+Para su publicación, el INEC recomienda que las tablas se exporten en formatos de alta calidad:
+
+```{r eval=FALSE}
+# Exportar la tabla en formatos de alta calidad
+gtsave(
+  tabla,
+  filename = "tabla_inec_formato.png",
+  vwidth = 2500,
+  vheight = 2000,
+  zoom = 3
+)
+
+# También se puede exportar a PDF para documentos de alta calidad
+gtsave(
+  tabla,
+  filename = "tabla_inec_formato.pdf",
+  vwidth = 2500,
+  vheight = 2000
+)
+```
+
+## Buenas prácticas según el INEC {#sec-buenas-practicas}
+
+### Notas preliminares {#sec-notas-preliminares}
+
+Según el INEC, las notas preliminares son esenciales para:
+
+- Informar sobre la unidad de medida de los datos (por ejemplo: miles de colones, toneladas, metros, porcentajes)
+- Aclarar aspectos del título (por ejemplo: "excluye el valor locativo", "incluye el ingreso por la actividad secundaria y excluye los ocupados sin ingreso")
+
+Estas notas deben colocarse inmediatamente después del título o subtítulo de la tabla.
+
+### Organización de la columna matriz {#sec-columna-matriz}
+
+El INEC indica que la columna matriz debe organizarse de manera lógica. Las categorías pueden ordenarse según distintos criterios:
+
+1. **Orden alfabético**: Útil para datos geográficos o divisiones territoriales:
+   ```
+   Belice
+   Costa Rica
+   El Salvador
+   Guatemala
+   Honduras
+   Nicaragua
+   Panamá
+   ```
+
+2. **Orden geográfico**: Cuando existe un orden establecido para zonas geográficas:
+   ```
+   San José
+   Alajuela
+   Cartago
+   Heredia
+   Guanacaste
+   Puntarenas
+   Limón
+   ```
+
+3. **Orden por magnitud**: Para variables que reflejan magnitudes:
+   ```
+   Menos de 1 hectárea
+   1 a menos de 2
+   2 a menos de 3
+   3 a menos de 4
+   4 a menos de 5
+   5 a menos de 10
+   10 a menos de 20
+   20 y más
+   ```
+
+4. **Orden cronológico**: Para series temporales, desde el período más antiguo al más reciente.
+
+5. **Orden tradicional**: Según convenciones establecidas (por ejemplo: hombre, mujer).
+
+### Títulos completos según el INEC {#sec-titulos-completos}
+
+El INEC establece que todo título de tabla debe:
+
+1. Incluir un número de cuadro
+2. Responder a las preguntas: ¿qué?, ¿cómo?, ¿dónde? y ¿cuándo?
+3. Ser conciso pero completo
+4. No incluir abreviaturas
+
+Ejemplo de un título completo siguiendo estos lineamientos:
+
+**Cuadro 4.2**
+**Costa Rica: Distribución porcentual de los hogares por tenencia de artefactos de tecnologías de información y comunicación, según zona y región de planificación. Julio 2020**
+
+## Implementando la tabla completa según lineamientos INEC {#sec-implementacion-completa}
+
+Aquí está el código completo que integra todos los elementos y recomendaciones del INEC:
+
+```{r eval=FALSE}
+# Cargar bibliotecas
+library(gt)
+library(dplyr)
+library(systemfonts)
+
+# Crear datos
+datos <- tibble(
+  concepto = c(
+    "Ingreso total del hogar",
+    "Ingreso por trabajo",
+    "Ingreso por salario",
+    "Ingreso autónomo",
+    "Ingreso renta de la propiedad",
+    "Subsidios estatales y becas",
+    "Otras transferencias"
+  ),
+  total_2011 = c(858974, 755110, 540394, 164671, 35945, 17001, 89827),
+  urbana_2011 = c(1015375, 863505, 639480, 187105, 75284, 8303, 111200),
+  rural_2011 = c(555471, 508650, 317140, 117118, 27353, 15318, 42988),
+  total_2012 = c(919427, 748175, 570991, 177183, 87200, 10962, 73088),
+  urbana_2012 = c(1088573, 858287, 671435, 191851, 87833, 8514, 127749),
+  rural_2012 = c(632928, 533243, 357470, 175776, 33607, 15719, 59556)
+)
+
+# PASO 1: CREAR TABLA BASE CON COLUMNA MATRIZ
+tabla <- datos |> 
+  gt(rowname_col = "concepto")
+
+# PASO 2: AGREGAR NÚMERO, TÍTULO Y NOTAS PRELIMINARES
+tabla <- tabla |>
+  tab_header(
+    title = md("**Cuadro 3.1**<br><br>**Costa Rica: Promedio de ingresos por hogar, por año y zona según fuente de ingreso, julio 2011 y julio 2012**"),
+    subtitle = md("*(Valores nominales)*<br><br>")
+  ) |>
+  tab_stubhead(label = md("**Fuente de ingresos**<br><br><br>"))
+
+# PASO 3: CONFIGURAR ENCABEZADOS DE LA MATRIZ DE DATOS
+tabla <- tabla |>
+  cols_label(
+    total_2011 = md("**Total**"), 
+    urbana_2011 = md("**Urbana**"), 
+    rural_2011 = md("**Rural**"),
+    total_2012 = md("**Total**"), 
+    urbana_2012 = md("**Urbana**"), 
+    rural_2012 = md("**Rural**")
+  ) |>
+  tab_spanner(label = md("**Zona**"), columns = matches("(?<!total_)2011", perl = TRUE), id = "anio_2011") |>
+  tab_spanner(label = md("**Zona**"), columns = matches("(?<!total_)2012", perl = TRUE), id = "anio_2012") |>
+  tab_spanner(label = md("**2011**"), columns = contains("2011"), level = 2, id = "zona_2011") |>
+  tab_spanner(label = md("**2012**"), columns = contains("2012"), level = 2, id = "zona_2012")
+
+# PASO 4: AGREGAR NOTAS AL PIE Y FUENTE
+tabla <- tabla |>
+  tab_footnote(
+    md("Ingreso con imputación de valores no declarados y con ajuste por sub declaración."),
+    cells_stub(rows = c("Ingreso por salario", "Ingreso autónomo", "Ingreso renta de la propiedad"))
+  ) |>
+  tab_footnote(
+    md("Ingreso con imputación de valores no declarados y con ajuste por sub declaración en las transferencias por pensión; incluye transferencia no monetaria."),
+    cells_stub(rows = "Otras transferencias")
+  ) |>
+  tab_source_note(md("**Fuente:** INEC, Costa Rica. [2012]. *Encuesta Nacional de Hogares Julio 2012. Resultados Generales*. 1 [3], p. 14."))
+
+# PASO 5: FORMATEAR LOS DATOS
+tabla <- tabla |>
+  fmt_number(columns = where(is.numeric), sep_mark = " ", decimals = 0) |>
+  tab_stub_indent(rows = c(3, 4), indent = 5)
+
+# PASO 6: ESTILIZAR LA TABLA
+tabla <- tabla |>
+  tab_style(
+    style = cell_text(align = "left"),
+    locations = cells_title()
+  ) |>
+  tab_style(
+    style = cell_text(align = "center"),
+    locations = list(
+      cells_body(columns = where(is.numeric)),
+      cells_column_labels(),
+      cells_column_spanners()
+    )
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(rows = 1)
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_stub(rows = 1)
+  ) |>
+  opt_table_font(
+    font = list(
+      google_font(name = "Roboto")
+    )
+  )
+
+# PASO 7: CONFIGURAR BORDES Y ESTRUCTURA FINAL
+tabla <- tabla |>
+  tab_options(
+    # Bordes principales
+    table.border.left.width = px(0), 
+    table.border.left.style = "none",
+    table.border.right.width = px(0), 
+    table.border.right.style = "none",
+    table.border.top.width = px(0),
+    table.border.bottom.width = px(0),
+    
+    # Bordes de encabezados
+    column_labels.border.top.width = px(2), 
+    column_labels.border.top.color = "black",
+    column_labels.border.bottom.width = px(2), 
+    column_labels.border.bottom.style = "solid",
+    column_labels.border.bottom.color = "black",
+    heading.border.bottom.width = px(2), 
+    heading.border.bottom.color = "black",
+    
+    # Bordes de cuerpo
+    stub.border.width = px(0),
+    table_body.hlines.width = px(0),
+    table_body.border.top.color = "black",
+    table_body.border.bottom.color = "black",
+    table_body.border.bottom.width = px(2),
+    
+    # Otros parámetros
+    footnotes.spec_ref = "^",
+    footnotes.spec_ftr = " "
+  )
+
+# PASO 8: VISUALIZAR Y EXPORTAR
+tabla
+
+# Exportar
+gtsave(
+  tabla,
+  filename = "tabla_inec_formato.png",
+  vwidth = 2500,
+  vheight = 2000,
+  zoom = 3
+)
+```
+
+## Resumen de funciones de gt para implementar lineamientos INEC {#sec-resumen-funciones}
+
+| Función de gt | Propósito según lineamientos INEC |
+|---------------|-----------------------------------|
+| `gt()` | Crear tabla base y definir columna matriz |
+| `tab_header()` | Agregar número de cuadro, título y notas preliminares |
+| `tab_stubhead()` | Definir el encabezado de la columna matriz |
+| `cols_label()` | Establecer etiquetas para los encabezados de columnas |
+| `tab_spanner()` | Crear jerarquías en los encabezados de columnas |
+| `tab_footnote()` | Agregar notas específicas en el pie de cuadro |
+| `tab_source_note()` | Agregar la fuente de los datos al final del pie de cuadro |
+| `fmt_number()` | Dar formato a los valores numéricos (separador de miles) |
+| `tab_stub_indent()` | Indentar categorías en la columna matriz para mostrar jerarquía |
+| `tab_style()` | Aplicar estilos para mejorar la claridad y legibilidad |
+| `tab_options()` | Configurar bordes y estructura general |
+| `gtsave()` | Exportar la tabla en formatos de alta calidad |
+
+## Recursos adicionales {#sec-recursos}
+
+- [Guía para la presentación de información estadística - INEC Costa Rica (Segunda edición)](https://admin.inec.cr/sites/default/files/media/mepresentinfoestadist-21122017_2.pdf)
+- [Documentación oficial de gt](https://gt.rstudio.com/)
+- [Galería de ejemplos de gt](https://gt.rstudio.com/articles/gallery.html)
+- [Normas internacionales para la presentación de estadísticas - ONU](https://unstats.un.org/)
