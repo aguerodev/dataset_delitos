@@ -5,6 +5,8 @@ library(cowplot)
 library(scales)
 library(ggview)
 library(systemfonts)
+library(ggh4x)
+
 
 
 habitantes <- data.frame(
@@ -53,7 +55,7 @@ ggplot(
     hjust = 0.5,
     vjust = -0.5,
     size = 4,
-    family = "Roboto-Light"
+    family = "Roboto"
   ) +
   annotate(
     "rect",
@@ -72,7 +74,7 @@ ggplot(
     hjust = 0.5,
     vjust = -0.5,
     size = 4,
-    family = "Roboto-Light"
+    family = "Roboto"
   ) +
   annotate(
     "rect",
@@ -91,7 +93,7 @@ ggplot(
     hjust = 0.5,
     vjust = -0.5,
     size = 4,
-    family = "Roboto-Light"
+    family = "Roboto"
   ) +
   geom_line(linewidth = 0.8) +
   labs(
@@ -110,7 +112,15 @@ ggplot(
     date_labels = "%Y",
     expand = expansion(add = 50)
   ) +
+  scale_y_continuous(
+    breaks = scales::breaks_width(0.1),
+    guide  = "axis_truncated"
+  ) +
   theme(
+    plot.background = element_rect(
+      fill = "#f9f9f9",
+      color = "#f9f9f9"
+    ),
     plot.tag = element_text(
       margin = margin(b = 60, l = 39),
       face = "plain"

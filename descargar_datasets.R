@@ -24,7 +24,7 @@ wait_for_download <- function(download_dir, filename, timeout = 60) {
     }
     Sys.sleep(1)
   }
-  stop("Timeout")
+  cli::cli_abort("Se acabó el tiempo de espera")
 }
 
 descargar_dataset_pj <- function(
@@ -55,16 +55,15 @@ descargar_dataset_pj <- function(
   execute_js_expr(
     "document.getElementById('txtFechaFinal').removeAttribute('readonly',0);"
   )
-  execute_js_expr(sprintf(
-    "document.getElementById('txtFechaFinal').value = '%s';",
-    end_date
+  execute_js_expr(glue(
+    "document.getElementById('txtFechaFinal').value = '{end_date}';",
   ))
+
   execute_js_expr(
     "document.getElementById('txtFechaInicio').removeAttribute('readonly',0);"
   )
-  execute_js_expr(sprintf(
-    "document.getElementById('txtFechaInicio').value = '%s';",
-    start_date
+  execute_js_expr(glue(
+    "document.getElementById('txtFechaInicio').value = '{start_date}';",
   ))
 
   execute_js_expr("document.getElementById('chbTodoPais').click();")
@@ -78,6 +77,7 @@ descargar_dataset_pj <- function(
   new_filename <- paste0("delitos_", format(date, "%Y-%m-%d"), ".html")
   new_path <- file.path(download_dir, new_filename)
   fs::file_move(full_path, new_path)
+
   return(new_path)
 }
 
@@ -101,5 +101,5 @@ df |>
   mutate(
     across(where(is.character), str_to_title),
     fecha = ymd(fecha)
-  ) |> 
+  ) |>
   readr::write_rds(glue("data/delitos_{today()}.rds"))
